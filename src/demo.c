@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <stdbool.h>
+#include "../lib/hmac_sha256.h"
 
 /*
     Decode and verify the integrity of this minimal sample using 
@@ -25,6 +27,14 @@ u_int8_t buffer[] = {  // The CBOR binary
     0x58, 0x20, 0x23, 0x7e, 0x67, 0x4c, 0x7b, 0xe1, 0x81, 0x8d, 0xdd, 0x7e,
     0xaa, 0xcf, 0x40, 0xca, 0x80, 0x41, 0x5b, 0x9a, 0xd8, 0x16, 0x88, 0x07,
     0x51, 0xd2, 0x13, 0x6c, 0x45, 0x38, 0x52, 0x07, 0x42, 0x0c };
+
+const u_int8_t SECRET_KEY[] = {
+    0x7f, 0xdd, 0x85, 0x1a, 0x3b, 0x9d, 0x2d, 0xaf, 0xc5, 0xf0, 0xd0, 0x00,
+    0x30, 0xe2, 0x2b, 0x93, 0x43, 0x90, 0x0c, 0xd4, 0x2e, 0xde, 0x49, 0x48,
+    0x56, 0x8a, 0x4a, 0x2e, 0xe6, 0x55, 0x29, 0x1a };
+
+const int HMAC_256_ALG = 5;
+const int HMAC_256_LEN = 32;
 
 int buflen;
 
@@ -113,6 +123,7 @@ int32_t getInt32() {
         return ~value;
     }
     badItem();
+    return 0;
 }
 
 void getTstr(STRING* string) {
@@ -153,6 +164,7 @@ int main(int argc, char **args) {
 
                 // We have read all but the signature value.
                 // The signed data are the preceding bytes.
+
                 // Decrement CSF map size (SigVal is not a part of signedData).
                 buffer[csfMap]--;
                 STRING signedData;
@@ -171,4 +183,18 @@ int main(int argc, char **args) {
     printIt(&signedData, true, "Signed data");
     printf("Algorithm: %d\n", alg);
     printIt(&sigVal, true, "Signature value");
+
+    if (alg != HMAC_256_ALG || sigVal.len != HMAC_256_LEN) {
+        printf("Error in alg or sigVal.len");
+        exit(1);
+    }
+    u_int8_t out[HMAC_256_LEN];
+    size_t hmac = hmac_sha256(SECRET_KEY, sizeof(SECRET_KEY), 
+                              signedData.bytes, signedData.len, 
+                              out, HMAC_256_LEN);
+    if (hmac != HMAC_256_LEN || memcmp(out, sigVal.bytes, HMAC_256_LEN)) {
+        printf("Signature validation failed");
+        exit(1);
+    }
+    printf("\nSample validated!!!\n");
 }

@@ -9,6 +9,7 @@
                 "-fansi-escape-codes",
                 "-g",
                 "${file}",
+                "${fileDirname}/../lib/*c",
                 "-o",
                 "${fileDirname}/../out/${fileBasenameNoExtension}"
             ],
