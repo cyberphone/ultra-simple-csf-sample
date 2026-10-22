@@ -1,4 +1,4 @@
-// demo.c
+// https://github.com/cyberphone/ultra-simple-csf-sample/blob/main/src/demo.c
 
 #include <stdio.h>
 #include <stdlib.h>
