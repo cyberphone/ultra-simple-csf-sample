@@ -190,7 +190,7 @@ int main(int argc, char **args) {
         printf("Error in alg or sigVal.len");
         exit(1);
     }
-    u_int8_t out[HMAC_256_LEN] = {0};
+    u_int8_t out[HMAC_256_LEN];
     size_t hmac = hmac_sha256(SECRET_KEY, sizeof(SECRET_KEY), 
                               signedData.bytes, signedData.len, 
                               out, HMAC_256_LEN);
