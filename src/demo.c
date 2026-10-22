@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include "../lib/hmac_sha256.h"
+#include "hmac_sha256.h"
 
 /*
     Decode and verify the integrity of this minimal sample using 
@@ -78,7 +78,7 @@ void badItem() {
     exit(1);
 }
 
-void getItem(int len, u_int8_t* bytes) {
+void getItem(int len, const u_int8_t* bytes) {
     while (len--) {
         if (getByte() != *bytes++) {
             badItem();
