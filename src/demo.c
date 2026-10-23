@@ -183,7 +183,7 @@ int main(int argc, char **args) {
     printIt(&arg1, false, "First argument");
     printIt(&arg2, false, "Second argument");
     printIt(&signedData, true, "Signed data");
-    printf("Algorithm: %d (COSE HMAC-256)\n", alg);
+    printf("Algorithm: %d (COSE HS256)\n", alg);
     printIt(&sigVal, true, "Signature value");
 
     if (alg != HMAC_256_ALG || sigVal.len != HMAC_256_LEN) {
