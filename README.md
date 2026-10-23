@@ -22,7 +22,7 @@ Expected output:
 First argument: data
 Second argument: more data
 Signed data: a301646461746102696d6f72652064617461f863a10105
-Algorithm: 5
+Algorithm: 5 (COSE HMAC-256)
 Signature value: 237e674c7be1818ddd7eaacf40ca80415b9ad816880751d2136c45385207420c
 
 Sample validated!!!
