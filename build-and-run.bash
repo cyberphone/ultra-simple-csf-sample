@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Rudimentary Linux bash script for building and running CSF sample.
+# Rudimentary Linux bash script for building and running the CSF sample.
 #
 # Run from any directory: $ bash path-to-this-script
 #
