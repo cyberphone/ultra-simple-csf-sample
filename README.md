@@ -27,3 +27,11 @@ Signature value: 237e674c7be1818ddd7eaacf40ca80415b9ad816880751d2136c45385207420
 
 Sample validated!!!
 ```
+## Notes
+In spite of its relative simplicity, the decoder checks that a CBOR object:
+- has exactly the expected elements and associated types
+- adheres to deterministic encoding
+
+The decoder is supposed to withstand incorrectly formatted objects, without causing buffer overrun conditions.
+
+The sample shows that deterministically encoded CBOR can (at the expense of the developer), be dealt with by programmatically honoring the order of map elements.
