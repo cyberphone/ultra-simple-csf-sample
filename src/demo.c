@@ -30,33 +30,33 @@ u_int8_t buffer[] = {  // The CBOR binary
     0xaa, 0xcf, 0x40, 0xca, 0x80, 0x41, 0x5b, 0x9a, 0xd8, 0x16, 0x88, 0x07,
     0x51, 0xd2, 0x13, 0x6c, 0x45, 0x38, 0x52, 0x07, 0x42, 0x0c };
 
-const u_int8_t SECRET_KEY[] = {
+const u_int8_t HMAC_KEY[] = {
     0x7f, 0xdd, 0x85, 0x1a, 0x3b, 0x9d, 0x2d, 0xaf, 0xc5, 0xf0, 0xd0, 0x00,
     0x30, 0xe2, 0x2b, 0x93, 0x43, 0x90, 0x0c, 0xd4, 0x2e, 0xde, 0x49, 0x48,
     0x56, 0x8a, 0x4a, 0x2e, 0xe6, 0x55, 0x29, 0x1a };
 
-const int HMAC_256_ALG = 5;
-const int HMAC_256_LEN = 32;
+const int COSE_HS256_ALG = 5;
+const int COSE_HS256_LEN = 32;
 
-int buflen;
+int bufferPosition;
 
 void initiate() {
-    buflen = 0;
+    bufferPosition = 0;
 }
 
 void terminate() {
-    if (buflen < sizeof(buffer)) {
+    if (bufferPosition < sizeof(buffer)) {
         printf("Unread buffer data");
         exit(1);
     }
 }
 
 u_int8_t getByte() {
-    if (buflen >= sizeof(buffer)) {
+    if (bufferPosition >= sizeof(buffer)) {
         printf("Buffer overflow");
         exit(1);
     }
-    return buffer[buflen++];
+    return buffer[bufferPosition++];
 }
 
 typedef struct {
@@ -109,7 +109,7 @@ void getVariableItem(u_int8_t majorType, STRING* string) {
     }
     int32_t len = _getLen(header);
     string->len = len;
-    string->bytes = &buffer[buflen];
+    string->bytes = &buffer[bufferPosition];
     while (len--) {
         getByte();  // Scan away!
     }
@@ -149,52 +149,52 @@ int main(int argc, char **args) {
     getItem(OUTER_MAP);
     
         getKey(1);
-        STRING arg1;
-        getTstr(&arg1);
+        STRING firstArgument;
+        getTstr(&firstArgument);
 
         getKey(2);
-        STRING arg2;
-        getTstr(&arg2);
+        STRING secondArgument;
+        getTstr(&secondArgument);
 
         getItem(SIMPLE_99);
 
-            int csfMap = buflen;
+            int csfMap = bufferPosition;
             getItem(CSF_MAP);
 
                 getKey(1);
-                int32_t alg = getInt32();
+                int32_t algorithm = getInt32();
 
                 // We have read all but the signature value.
                 // The signed data are the preceding bytes.
 
-                // Decrement CSF map size (SigVal is not a part of signedData).
+                // Decrement CSF map size (signatureValue is not a part of signedData).
                 buffer[csfMap]--;
                 STRING signedData;
-                signedData.len = buflen;
+                signedData.len = bufferPosition;
                 signedData.bytes = buffer;
 
                 getKey(6);
-                STRING sigVal;
-                getBstr(&sigVal);
+                STRING signatureValue;
+                getBstr(&signatureValue);
 
     terminate();
 
     // Everything is format-wise correct.
-    printIt(&arg1, false, "First argument");
-    printIt(&arg2, false, "Second argument");
+    printIt(&firstArgument, false, "First argument");
+    printIt(&secondArgument, false, "Second argument");
     printIt(&signedData, true, "Signed data");
-    printf("Algorithm: %d (COSE HS256)\n", alg);
-    printIt(&sigVal, true, "Signature value");
+    printf("Algorithm: %d (COSE HS256)\n", algorithm);
+    printIt(&signatureValue, true, "Signature value");
 
-    if (alg != HMAC_256_ALG || sigVal.len != HMAC_256_LEN) {
-        printf("Error in alg or sigVal.len");
+    if (algorithm != COSE_HS256_ALG || signatureValue.len != COSE_HS256_LEN) {
+        printf("Error in algorithm or signatureValue.len");
         exit(1);
     }
-    u_int8_t out[HMAC_256_LEN];
-    size_t hmac = hmac_sha256(SECRET_KEY, sizeof(SECRET_KEY), 
+    u_int8_t out[COSE_HS256_LEN];
+    size_t hmac = hmac_sha256(HMAC_KEY, sizeof(HMAC_KEY), 
                               signedData.bytes, signedData.len, 
-                              out, HMAC_256_LEN);
-    if (hmac != HMAC_256_LEN || memcmp(out, sigVal.bytes, HMAC_256_LEN)) {
+                              out, COSE_HS256_LEN);
+    if (hmac != COSE_HS256_LEN || memcmp(out, signatureValue.bytes, COSE_HS256_LEN)) {
         printf("Signature validation failed");
         exit(1);
     }
