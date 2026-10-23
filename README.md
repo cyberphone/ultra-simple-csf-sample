@@ -34,6 +34,6 @@ In spite of its relative simplicity, the decoder checks that a CBOR object:
 
 The decoder is supposed to withstand incorrectly formatted objects, without causing buffer overrun conditions.
 
-The docoder does not depend on `malloc()` or deeply nested function-calls.
+The decoder does not depend on `malloc()` or deeply nested function-calls.
 
 The sample shows that deterministically encoded CBOR can (at the expense of the developer), be dealt with by programmatically honoring the order of map elements.
