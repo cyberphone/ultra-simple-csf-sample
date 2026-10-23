@@ -12,6 +12,11 @@ Sample:
 }
 ```
 
+Secret key:
+```code
+7fdd851a3b9d2dafc5f0d00030e22b9343900cd42ede4948568a4a2ee655291a
+```
+
 Expected output:
 ```code
 First argument: data
