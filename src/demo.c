@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include "hmac_sha256.h"
 
 /*
@@ -23,14 +24,14 @@
 
 */
 
-u_int8_t buffer[] = {  // The CBOR binary
+uint8_t buffer[] = {  // The CBOR binary
     0xa3, 0x01, 0x64, 0x64, 0x61, 0x74, 0x61, 0x02, 0x69, 0x6d, 0x6f, 0x72, 
     0x65, 0x20, 0x64, 0x61, 0x74, 0x61, 0xf8, 0x63, 0xa2, 0x01, 0x05, 0x06,
     0x58, 0x20, 0x23, 0x7e, 0x67, 0x4c, 0x7b, 0xe1, 0x81, 0x8d, 0xdd, 0x7e,
     0xaa, 0xcf, 0x40, 0xca, 0x80, 0x41, 0x5b, 0x9a, 0xd8, 0x16, 0x88, 0x07,
     0x51, 0xd2, 0x13, 0x6c, 0x45, 0x38, 0x52, 0x07, 0x42, 0x0c };
 
-const u_int8_t HMAC_KEY[] = {
+const uint8_t HMAC_KEY[] = {
     0x7f, 0xdd, 0x85, 0x1a, 0x3b, 0x9d, 0x2d, 0xaf, 0xc5, 0xf0, 0xd0, 0x00,
     0x30, 0xe2, 0x2b, 0x93, 0x43, 0x90, 0x0c, 0xd4, 0x2e, 0xde, 0x49, 0x48,
     0x56, 0x8a, 0x4a, 0x2e, 0xe6, 0x55, 0x29, 0x1a };
@@ -51,7 +52,7 @@ void terminate() {
     }
 }
 
-u_int8_t getByte() {
+uint8_t getByte() {
     if (bufferPosition >= sizeof(buffer)) {
         printf("Buffer overflow");
         exit(1);
@@ -61,16 +62,16 @@ u_int8_t getByte() {
 
 typedef struct {
     int len;
-    u_int8_t* bytes;
+    uint8_t* bytes;
 } STRING;
 
-const u_int8_t _OUTER_MAP[] = {0xa3}; 
+const uint8_t _OUTER_MAP[] = {0xa3}; 
 #define OUTER_MAP sizeof(_OUTER_MAP), _OUTER_MAP
 
-const u_int8_t _CSF_MAP[] = {0xa2}; 
+const uint8_t _CSF_MAP[] = {0xa2}; 
 #define CSF_MAP sizeof(_CSF_MAP), _CSF_MAP
 
-const u_int8_t _SIMPLE_99[] = {0xf8, 0x63};
+const uint8_t _SIMPLE_99[] = {0xf8, 0x63};
 #define SIMPLE_99 sizeof(_SIMPLE_99), _SIMPLE_99
 
 void badItem() {
@@ -78,7 +79,7 @@ void badItem() {
     exit(1);
 }
 
-void getItem(int len, const u_int8_t* bytes) {
+void getItem(int len, const uint8_t* bytes) {
     while (len--) {
         if (getByte() != *bytes++) {
             badItem();
@@ -86,11 +87,11 @@ void getItem(int len, const u_int8_t* bytes) {
     }
 }
 
-void getKey(u_int8_t key) {
+void getKey(uint8_t key) {
     getItem(1, &key);
 }
 
-int32_t _getLen(u_int8_t header) {
+int32_t _getLen(uint8_t header) {
     int32_t len = header & 0x1f;
     if (len > 23) {
         if (len == 24) {
@@ -102,8 +103,8 @@ int32_t _getLen(u_int8_t header) {
     return len;
 }
 
-void getVariableItem(u_int8_t majorType, STRING* string) {
-    u_int8_t header = getByte();
+void getVariableItem(uint8_t majorType, STRING* string) {
+    uint8_t header = getByte();
     if ((header & 0xe0) != majorType) {
         badItem();
     }
@@ -116,7 +117,7 @@ void getVariableItem(u_int8_t majorType, STRING* string) {
 }
 
 int32_t getInt32() {
-    u_int8_t header = getByte();
+    uint8_t header = getByte();
     int32_t value = _getLen(header);
     if ((header &= 0xe0) == 0x00) {
         return value;
@@ -190,7 +191,7 @@ int main(int argc, char **args) {
         printf("Error in algorithm or signatureValue.len");
         exit(1);
     }
-    u_int8_t out[COSE_HS256_LEN];
+    uint8_t out[COSE_HS256_LEN];
     size_t hmac = hmac_sha256(HMAC_KEY, sizeof(HMAC_KEY), 
                               signedData.bytes, signedData.len, 
                               out, COSE_HS256_LEN);
