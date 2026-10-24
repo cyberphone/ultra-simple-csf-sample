@@ -5,7 +5,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include "hmac_sha256.h"
+#include "../lib/hmac_sha256.h"
 
 /*
     Decode and verify the integrity of this minimal sample using 
