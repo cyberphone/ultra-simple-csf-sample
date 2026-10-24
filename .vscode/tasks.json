@@ -7,7 +7,6 @@
             "args": [
                 "-fcolor-diagnostics",
                 "-fansi-escape-codes",
-                "-Wno-gnu-folding-constant",
                 "-g",
                 "${file}",
                 "${fileDirname}/../lib/*c",

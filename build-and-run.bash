@@ -5,6 +5,6 @@
 # Run from any directory: $ bash path-to-this-script
 #
 pushd $(dirname "${BASH_SOURCE[0]}")/out
-gcc -o demo -Os -Wno-gnu-folding-constant -I ../lib ../src/demo.c ../lib/*.c
+gcc -o demo -Os ../src/demo.c ../lib/*.c
 ./demo
 popd
