@@ -4,7 +4,7 @@
 #
 # Run from any directory: $ bash path-to-this-script
 #
-pushd $(dirname "${BASH_SOURCE[0]}")/out
+pushd $(dirname "${BASH_SOURCE[0]}")/out >/dev/null
 gcc -o demo -Os ../src/demo.c ../lib/*.c
 ./demo
-popd
+popd >/dev/null
