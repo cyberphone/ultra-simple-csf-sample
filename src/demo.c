@@ -103,11 +103,15 @@ int32_t _getLen(uint8_t header) {
         case 25:
         case 26:
             {
-                int32_t q = (len - 24) << 1;
+                int32_t q = 1 << (len - 24);
+                int32_t mask = 0xffff << (q / 2) * 8;
                 len = 0;
                 while (q--) {
                     len <<= 8;
                     len += getByte();
+                }
+                if ((len & mask) == 0) {
+                    badItem();
                 }
             }
     }
