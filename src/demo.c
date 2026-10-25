@@ -110,7 +110,7 @@ int32_t _getLen(uint8_t header) {
                     len <<= 8;
                     len += getByte();
                 }
-                if (len < 0 || (len & mask) == 0) {
+                if (len & 0x7fffffff || (len & mask) == 0) {
                     badItem();
                 }
             }
