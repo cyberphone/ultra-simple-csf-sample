@@ -93,12 +93,23 @@ void getKey(uint8_t key) {
 
 int32_t _getLen(uint8_t header) {
     int32_t len = header & 0x1f;
-    if (len > 23) {
-        if (len == 24) {
-            len = getByte();
-        } else {
-            badItem();   
-        }
+    if (len >= 24) switch (len) {
+        case 24:
+            if ((len = getByte()) >= 24) { 
+                break;
+            }
+        default:
+            badItem();
+        case 25:
+        case 26:
+            {
+                int32_t q = (len - 24) << 1;
+                len = 0;
+                while (q--) {
+                    len <<= 8;
+                    len += getByte();
+                }
+            }
     }
     return len;
 }
