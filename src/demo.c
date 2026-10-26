@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdarg.h>
 #include "../lib/hmac_sha256.h"
 
 /*
@@ -41,54 +42,31 @@ const uint8_t HMAC_KEY[] = {
 
 int bufferPosition;
 
+void failedOperation(char *message, ...) {
+    va_list args;
+    printf("\n*** ");
+    va_start(args, message);
+    vprintf(message, args);
+    va_end(args);
+    printf(" (bufferPosition = %d)\n\n", bufferPosition);
+    exit(1);
+}
+
 void initiate() {
     bufferPosition = 0;
 }
 
 void terminate() {
     if (bufferPosition < sizeof(buffer)) {
-        printf("Unread buffer data");
-        exit(1);
+        failedOperation("Unread buffer data");
     }
 }
 
 uint8_t getByte() {
     if (bufferPosition >= sizeof(buffer)) {
-        printf("Buffer overflow");
-        exit(1);
+        failedOperation("Buffer overflow");
     }
     return buffer[bufferPosition++];
-}
-
-typedef struct {
-    int len;
-    uint8_t* bytes;
-} STRING;
-
-const uint8_t _OUTER_MAP[] = {0xa3}; 
-#define OUTER_MAP sizeof(_OUTER_MAP), _OUTER_MAP
-
-const uint8_t _CSF_MAP[] = {0xa2}; 
-#define CSF_MAP sizeof(_CSF_MAP), _CSF_MAP
-
-const uint8_t _SIMPLE_99[] = {0xf8, 0x63};
-#define SIMPLE_99 sizeof(_SIMPLE_99), _SIMPLE_99
-
-void badItem() {
-    printf("Unexpected item");
-    exit(1);
-}
-
-void getItem(int len, const uint8_t* bytes) {
-    while (len--) {
-        if (getByte() != *bytes++) {
-            badItem();
-        }
-    }
-}
-
-void getKey(uint8_t key) {
-    getItem(1, &key);
 }
 
 int32_t _getLen(uint8_t header) {
@@ -99,7 +77,7 @@ int32_t _getLen(uint8_t header) {
                 break;
             }
         default:
-            badItem();
+            failedOperation("Unsupported length: 0x%d", len);
         case 25:
         case 26:
             {
@@ -111,24 +89,11 @@ int32_t _getLen(uint8_t header) {
                     len += getByte();
                 }
                 if (len & 0x7fffffff || (len & mask) == 0) {
-                    badItem();
+                    failedOperation("Value of of range: %d", len);
                 }
             }
     }
     return len;
-}
-
-void getVariableItem(uint8_t majorType, STRING* string) {
-    uint8_t header = getByte();
-    if ((header & 0xe0) != majorType) {
-        badItem();
-    }
-    int32_t len = _getLen(header);
-    string->len = len;
-    string->bytes = &buffer[bufferPosition];
-    while (len--) {
-        getByte();  // Scan away!
-    }
 }
 
 int32_t getInt32() {
@@ -140,16 +105,55 @@ int32_t getInt32() {
     if (header == 0x20) {
         return ~value;
     }
-    badItem();
+    failedOperation("Expected integer");
     return 0;
 }
 
+void getSimple(uint8_t value) {
+    if (getByte() != 0xf8 || getByte() != value) {
+        failedOperation("Expected simple(%d)", value);
+    }
+}
+
+void getKey(int32_t key) {
+    if (key != getInt32()) {
+        failedOperation("Expected key: %d", key);
+    }
+}
+
+typedef struct {
+    int len;
+    uint8_t* bytes;
+} STRING;
+
+void _getString(uint8_t majorType, STRING* string) {
+    uint8_t header = getByte();
+    if ((header & 0xe0) != majorType) {
+        failedOperation("Expected string type");
+    }
+    int32_t len = _getLen(header);
+    string->len = len;
+    string->bytes = &buffer[bufferPosition];
+    while (len--) {
+        getByte();  // Scan away, but check for overrun!
+    }
+}
+
 void getTstr(STRING* string) {
-    getVariableItem(0x60, string);
+    _getString(0x60, string);
 }
 
 void getBstr(STRING* string) {
-    getVariableItem(0x40, string);
+    _getString(0x40, string);
+}
+
+int32_t getMap(int32_t elements) {
+    int32_t savePos = bufferPosition;
+    uint8_t header = getByte();
+    if ((header & 0xe0) != 0xa0 || elements != _getLen(header)) {
+        failedOperation("Expected map with %d elements", elements);
+    }
+    return savePos; 
 }
 
 void printIt(STRING* data, bool hex, char* description) {
@@ -162,7 +166,7 @@ void printIt(STRING* data, bool hex, char* description) {
 
 int main(int argc, char **args) {
     initiate();
-    getItem(OUTER_MAP);
+    getMap(3);
     
         getKey(1);
         STRING firstArgument;
@@ -172,24 +176,23 @@ int main(int argc, char **args) {
         STRING secondArgument;
         getTstr(&secondArgument);
 
-        getItem(SIMPLE_99);
+        getSimple(99);  // CSF object label
 
-            int csfMap = bufferPosition;
-            getItem(CSF_MAP);
+            int csfMapPositiom = getMap(2);  // CSF map
 
-                getKey(1);
+                getKey(1);  // CSF algorithm label
                 int32_t algorithm = getInt32();
 
                 // We have read all but the signature value.
                 // The signed data are the preceding bytes.
 
                 // Decrement CSF map size (signatureValue is not a part of signedData).
-                buffer[csfMap]--;
+                buffer[csfMapPositiom]--;
                 STRING signedData;
                 signedData.len = bufferPosition;
                 signedData.bytes = buffer;
 
-                getKey(6);
+                getKey(6); // CSF signatue value label
                 STRING signatureValue;
                 getBstr(&signatureValue);
 
@@ -203,16 +206,14 @@ int main(int argc, char **args) {
     printIt(&signatureValue, true, "Signature value");
 
     if (algorithm != COSE_HS256_ALG || signatureValue.len != COSE_HS256_LEN) {
-        printf("Error in algorithm or signatureValue.len");
-        exit(1);
+        failedOperation("Error in algorithm or signatureValue.len");
     }
     uint8_t out[COSE_HS256_LEN];
     size_t hmac = hmac_sha256(HMAC_KEY, sizeof(HMAC_KEY), 
                               signedData.bytes, signedData.len, 
                               out, COSE_HS256_LEN);
     if (hmac != COSE_HS256_LEN || memcmp(out, signatureValue.bytes, COSE_HS256_LEN)) {
-        printf("Signature validation failed");
-        exit(1);
+        failedOperation("Signature validation failed");
     }
     printf("\nSample validated!!!\n");
 }
