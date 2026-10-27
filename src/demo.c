@@ -62,7 +62,7 @@ void terminate() {
     }
 }
 
-uint8_t getByte() {
+uint8_t _getByte() {
     if (bufferPosition >= sizeof(buffer)) {
         failedOperation("Buffer overflow");
     }
@@ -73,7 +73,7 @@ int32_t _getLen(uint8_t header) {
     int32_t len = header & 0x1f;
     if (len >= 24) switch (len) {
         case 24:
-            if ((len = getByte()) < 24) {
+            if ((len = _getByte()) < 24) {
               non_deterministic:
                 failedOperation("Non-deterministically encoded integer");
             }
@@ -88,7 +88,7 @@ int32_t _getLen(uint8_t header) {
                 len = 0;
                 while (q--) {
                     len <<= 8;
-                    len += getByte();
+                    len += _getByte();
                 }
                 if ((len & mask) == 0) goto non_deterministic;
                 if (len & 0x80000000) {
@@ -100,7 +100,7 @@ int32_t _getLen(uint8_t header) {
 }
 
 int32_t getInt32() {
-    uint8_t header = getByte();
+    uint8_t header = _getByte();
     int32_t value = _getLen(header);
     if ((header &= 0xe0) == 0x00) {
         return value;
@@ -113,7 +113,7 @@ int32_t getInt32() {
 }
 
 void getSimple(uint8_t value) {
-    if (getByte() != 0xf8 || getByte() != value) {
+    if (_getByte() != 0xf8 || _getByte() != value) {
         failedOperation("Expected simple(%d)", value);
     }
 }
@@ -126,7 +126,7 @@ void getKey(int32_t key) {
 
 int32_t getMap(int32_t elements) {
     int32_t savePos = bufferPosition;
-    uint8_t header = getByte();
+    uint8_t header = _getByte();
     if ((header & 0xe0) != 0xa0 || elements != _getLen(header)) {
         failedOperation("Expected map with %d elements", elements);
     }
@@ -139,7 +139,7 @@ typedef struct {
 } STRING;
 
 void _getString(uint8_t majorType, STRING* string) {
-    uint8_t header = getByte();
+    uint8_t header = _getByte();
     if ((header & 0xe0) != majorType) {
         failedOperation("Expected string type");
     }
@@ -147,7 +147,7 @@ void _getString(uint8_t majorType, STRING* string) {
     string->len = len;
     string->bytes = &buffer[bufferPosition];
     while (len--) {
-        getByte();  // Scan away, but check for overrun!
+        _getByte();  // Scan away, but check for overrun!
     }
 }
 
