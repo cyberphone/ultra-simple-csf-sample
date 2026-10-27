@@ -108,7 +108,7 @@ int32_t getInt32() {
     if (header == 0x20) {
         return ~value;
     }
-    failedOperation("Expected integer, got: %02x", header);
+    failedOperation("Expected integer");
     return 0;
 }
 
@@ -122,6 +122,15 @@ void getKey(int32_t key) {
     if (key != getInt32()) {
         failedOperation("Expected key: %d", key);
     }
+}
+
+int32_t getMap(int32_t elements) {
+    int32_t savePos = bufferPosition;
+    uint8_t header = getByte();
+    if ((header & 0xe0) != 0xa0 || elements != _getLen(header)) {
+        failedOperation("Expected map with %d elements", elements);
+    }
+    return savePos; 
 }
 
 typedef struct {
@@ -148,15 +157,6 @@ void getTstr(STRING* string) {
 
 void getBstr(STRING* string) {
     _getString(0x40, string);
-}
-
-int32_t getMap(int32_t elements) {
-    int32_t savePos = bufferPosition;
-    uint8_t header = getByte();
-    if ((header & 0xe0) != 0xa0 || elements != _getLen(header)) {
-        failedOperation("Expected map with %d elements", elements);
-    }
-    return savePos; 
 }
 
 void printIt(STRING* data, bool hex, char* description) {
