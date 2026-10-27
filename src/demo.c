@@ -73,11 +73,13 @@ int32_t _getLen(uint8_t header) {
     int32_t len = header & 0x1f;
     if (len >= 24) switch (len) {
         case 24:
-            if ((len = getByte()) >= 24) { 
-                break;
+            if ((len = getByte()) < 24) {
+              non_deterministic:
+                failedOperation("Non-deterministically encoded integer");
             }
+            break;
         default:
-            failedOperation("Unsupported length: 0x%d", len);
+            failedOperation("Unsupported or invalid length: 0x%02x", len);
         case 25:
         case 26:
             {
@@ -88,8 +90,9 @@ int32_t _getLen(uint8_t header) {
                     len <<= 8;
                     len += getByte();
                 }
-                if (len & 0x7fffffff || (len & mask) == 0) {
-                    failedOperation("Value of of range: %d", len);
+                if ((len & mask) == 0) goto non_deterministic;
+                if (len & 0x80000000) {
+                    failedOperation("Int32 value out of range");
                 }
             }
     }
@@ -105,7 +108,7 @@ int32_t getInt32() {
     if (header == 0x20) {
         return ~value;
     }
-    failedOperation("Expected integer");
+    failedOperation("Expected integer, got: %02x", header);
     return 0;
 }
 
