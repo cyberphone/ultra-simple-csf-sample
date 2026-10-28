@@ -69,39 +69,36 @@ uint8_t _getByte() {
     return buffer[bufferPosition++];
 }
 
-int32_t _getLen(uint8_t header) {
-    int32_t len = header & 0x1f;
-    if (len >= 24) switch (len) {
-        case 24:
-            if ((len = _getByte()) < 24) {
-              non_deterministic:
-                failedOperation("Non-deterministically encoded integer");
-            }
-            break;
+int32_t _getLength(uint8_t header) {
+    int32_t length = header & 0x1f;
+    if (length >= 24) switch (length) {
         default:
-            failedOperation("Unsupported or invalid length: 0x%02x", len);
+            failedOperation("Unsupported or invalid length: 0x%02x", length);
+        case 24:
         case 25:
         case 26:
             {
-                int32_t q = 1 << (len - 24);
-                int32_t mask = 0xffff << (q / 2) * 8;
-                len = 0;
+                int32_t q = 1 << (length - 24);
+                int32_t leadingZeroMask = 0xffff << (q * 4);
+                length = 0;
                 while (q--) {
-                    len <<= 8;
-                    len += _getByte();
+                    length <<= 8;
+                    length += _getByte();
                 }
-                if ((len & mask) == 0) goto non_deterministic;
-                if (len & 0x80000000) {
+                if (length & 0x80000000) {
                     failedOperation("Int32 value out of range");
+                }
+                if ((length & leadingZeroMask) == 0 || length < 24) {
+                    failedOperation("Non-deterministically encoded integer");
                 }
             }
     }
-    return len;
+    return length;
 }
 
 int32_t getInt32() {
     uint8_t header = _getByte();
-    int32_t value = _getLen(header);
+    int32_t value = _getLength(header);
     if ((header &= 0xe0) == 0x00) {
         return value;
     }
@@ -127,14 +124,14 @@ void getKey(int32_t key) {
 int32_t getMap(int32_t elements) {
     int32_t savePos = bufferPosition;
     uint8_t header = _getByte();
-    if ((header & 0xe0) != 0xa0 || elements != _getLen(header)) {
+    if ((header & 0xe0) != 0xa0 || elements != _getLength(header)) {
         failedOperation("Expected map with %d elements", elements);
     }
     return savePos; 
 }
 
 typedef struct {
-    int len;
+    int length;
     uint8_t* bytes;
 } STRING;
 
@@ -143,10 +140,10 @@ void _getString(uint8_t majorType, STRING* string) {
     if ((header & 0xe0) != majorType) {
         failedOperation("Expected string type");
     }
-    int32_t len = _getLen(header);
-    string->len = len;
+    int32_t length = _getLength(header);
+    string->length = length;
     string->bytes = &buffer[bufferPosition];
-    while (len--) {
+    while (length--) {
         _getByte();  // Scan away, but check for overrun!
     }
 }
@@ -161,7 +158,7 @@ void getBstr(STRING* string) {
 
 void printIt(STRING* data, bool hex, char* description) {
     printf("%s: ", description);
-    for (int i = 0; i < data->len; ) {
+    for (int i = 0; i < data->length; ) {
         printf(hex ? "%02x" : "%c", data->bytes[i++]);
     }
     printf("\n");
@@ -192,7 +189,7 @@ int main(int argc, char **args) {
                 // Decrement CSF map size (signatureValue is not a part of signedData).
                 buffer[csfMapPositiom]--;
                 STRING signedData;
-                signedData.len = bufferPosition;
+                signedData.length = bufferPosition;
                 signedData.bytes = buffer;
 
                 getKey(6); // CSF signatue value label
@@ -208,12 +205,12 @@ int main(int argc, char **args) {
     printf("Algorithm: %d (COSE HS256)\n", algorithm);
     printIt(&signatureValue, true, "Signature value");
 
-    if (algorithm != COSE_HS256_ALG || signatureValue.len != COSE_HS256_LEN) {
-        failedOperation("Error in algorithm or signatureValue.len");
+    if (algorithm != COSE_HS256_ALG || signatureValue.length != COSE_HS256_LEN) {
+        failedOperation("Error in algorithm or signatureValue.length");
     }
     uint8_t out[COSE_HS256_LEN];
     size_t hmac = hmac_sha256(HMAC_KEY, sizeof(HMAC_KEY), 
-                              signedData.bytes, signedData.len, 
+                              signedData.bytes, signedData.length, 
                               out, COSE_HS256_LEN);
     if (hmac != COSE_HS256_LEN || memcmp(out, signatureValue.bytes, COSE_HS256_LEN)) {
         failedOperation("Signature validation failed");
