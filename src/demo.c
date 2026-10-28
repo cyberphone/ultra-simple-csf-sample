@@ -178,16 +178,14 @@ int main(int argc, char **args) {
 
         getSimple(99);  // CSF object label
 
-            int csfMapPositiom = getMap(2);  // CSF map
+            // Read and verify the size of the CSF map.  Then decrement
+            // CSF map size (signatureValue is not a part of signedData).
+            buffer[getMap(2)]--;
 
                 getKey(1);  // CSF algorithm label
                 int32_t algorithm = getInt32();
 
-                // We have read all but the signature value.
-                // The signed data are the preceding bytes.
-
-                // Decrement CSF map size (signatureValue is not a part of signedData).
-                buffer[csfMapPositiom]--;
+                // The signed data constitute of the preceding bytes.
                 STRING signedData;
                 signedData.length = bufferPosition;
                 signedData.bytes = buffer;
