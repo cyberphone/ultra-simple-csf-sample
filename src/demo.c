@@ -178,14 +178,30 @@ int main(int argc, char **args) {
 
         getSimple(99);  // CSF object label
 
-            // Read and verify the size of the CSF map.  Then decrement
-            // CSF map size (signatureValue is not a part of signedData).
+            // Read and verify the size of the CSF map.
+            //
+            // Then decrement CSF map size by one since
+            // signatureValue is not a part of signedData.
+            //
+            // This is the opposite to what happens during signature
+            // creation, where signatureValue is the final element
+            // added and thus increases the CSF map size with one
+            // in order to maintain a valid CSF container.
             buffer[getMap(2)]--;
 
                 getKey(1);  // CSF algorithm label
                 int32_t algorithm = getInt32();
 
-                // The signed data constitute of the preceding bytes.
+                // signedData constitutes of the following CBOR data:
+                // 
+                //  {
+                //    1: "data",
+                //    2: "more data",
+                //    simple(99): {
+                //      1: 5
+                //    }
+                //  }
+                // 
                 STRING signedData;
                 signedData.length = bufferPosition;
                 signedData.bytes = buffer;
