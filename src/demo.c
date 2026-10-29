@@ -162,7 +162,8 @@ void debugPrint(STRING* data, bool hex, char* description) {
 
 int main(int argc, char **args) {
     initiate();
-    getMap(3);
+
+    getMap(3);  // Top-level map
     
         getKey(1);
         STRING firstArgument;
