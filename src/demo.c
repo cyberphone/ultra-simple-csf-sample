@@ -156,7 +156,7 @@ void getBstr(STRING* string) {
     _getString(0x40, string);
 }
 
-void printIt(STRING* data, bool hex, char* description) {
+void debugPrint(STRING* data, bool hex, char* description) {
     printf("%s: ", description);
     for (int i = 0; i < data->length; ) {
         printf(hex ? "%02x" : "%c", data->bytes[i++]);
@@ -206,19 +206,20 @@ int main(int argc, char **args) {
                 signedData.length = bufferPosition;
                 signedData.bytes = buffer;
 
-                getKey(6); // CSF signatue value label
+                getKey(6); // CSF signatureValue label
                 STRING signatureValue;
                 getBstr(&signatureValue);
 
     terminate();
 
-    // Everything is format-wise correct.
-    printIt(&firstArgument, false, "First argument");
-    printIt(&secondArgument, false, "Second argument");
-    printIt(&signedData, true, "Signed data");
+    // Sample passed format verification. Print read data.
+    debugPrint(&firstArgument, false, "First argument");
+    debugPrint(&secondArgument, false, "Second argument");
+    debugPrint(&signedData, true, "Signed data");
     printf("Algorithm: %d (COSE HS256)\n", algorithm);
-    printIt(&signatureValue, true, "Signature value");
+    debugPrint(&signatureValue, true, "Signature value");
 
+    // Finally, signature validation.
     if (algorithm != COSE_HS256_ALG || signatureValue.length != COSE_HS256_LEN) {
         failedOperation("Error in algorithm or signatureValue.length");
     }
