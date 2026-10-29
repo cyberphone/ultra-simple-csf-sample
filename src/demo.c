@@ -99,14 +99,10 @@ int32_t _getLength(uint8_t header) {
 int32_t getInt32() {
     uint8_t header = _getByte();
     int32_t value = _getLength(header);
-    if ((header &= 0xe0) == 0x00) {
-        return value;
+    if (header & 0xc0) {
+        failedOperation("Expected integer");
     }
-    if (header == 0x20) {
-        return ~value;
-    }
-    failedOperation("Expected integer");
-    return 0;
+    return header < 0x20 ? value : ~value;
 }
 
 void getSimple(uint8_t value) {
