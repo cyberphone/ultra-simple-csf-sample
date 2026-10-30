@@ -88,7 +88,7 @@ int32_t _getLength(uint8_t header) {
                 if (length & 0x80000000) {
                     failedOperation("Int32 value out of range");
                 }
-                if ((length & leadingZeroMask) == 0 || length < 24) {
+                if (!(length & leadingZeroMask) || length < 24) {
                     failedOperation("Non-deterministically encoded integer");
                 }
             }
