@@ -98,10 +98,10 @@ int32_t _getLength(uint8_t header) {
 
 int32_t getInt32() {
     uint8_t header = _getByte();
-    int32_t value = _getLength(header);
     if (header & 0xc0) {
         failedOperation("Expected integer");
     }
+    int32_t value = _getLength(header);
     return header < 0x20 ? value : ~value;
 }
 
