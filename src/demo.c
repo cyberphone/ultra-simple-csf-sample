@@ -182,7 +182,7 @@ int main(int argc, char **args) {
             //
             // This is the opposite to what happens during signature
             // creation, where signatureValue is the final element
-            // added and thus increases the CSF map size with one
+            // added and thus increases the CSF map size by one
             // in order to maintain a valid CSF container.
             buffer[getMap(2)]--;
 
