@@ -211,13 +211,13 @@ int main(int argc, char **args) {
 
                 // signedData constitutes of the following CBOR data:
                 // 
-                //  {
+                //  1010(["https://example.com/myobject", {
                 //    1: "data",
                 //    2: "more data",
                 //    simple(99): {
                 //      1: 5
                 //    }
-                //  }
+                //  }])
                 // 
                 STRING signedData;
                 signedData.length = bufferPosition;
