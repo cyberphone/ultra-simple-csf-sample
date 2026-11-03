@@ -37,3 +37,6 @@ The decoder is supposed to withstand incorrectly formatted objects, without caus
 The decoder does not depend on `malloc()` or deeply nested function-calls.
 
 The sample shows that deterministically encoded CBOR can (at the expense of the developer), be dealt with by programmatically honoring the order of map elements.
+
+There is also variant of the sample code using a top-level object type-indicator:
+[demo-url-type-id.c](src/demo-url-type-id.c)
