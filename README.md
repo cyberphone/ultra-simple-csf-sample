@@ -1,4 +1,4 @@
-## Ultra-simple and ultra-primitive CSF sample
+## Ultra-simple CSF Sample
 
 Sample:
 ```cbor
