@@ -167,7 +167,7 @@ void getCOTX(char *objectType) {
                 return;
             }
     }    
-    failedOperation("Expected 1010([%s,object])", objectType);
+    failedOperation("Expected 1010([\"%s\",object])", objectType);
 }
 
 void debugPrint(STRING* data, bool hex, char* description) {
