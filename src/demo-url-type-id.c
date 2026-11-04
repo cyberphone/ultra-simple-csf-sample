@@ -172,9 +172,11 @@ void getCOTX(char *objectType) {
 
 void debugPrint(STRING* data, bool hex, char* description) {
     printf("%s: ", description);
+    if (!hex) printf("\"");
     for (int i = 0; i < data->length; ) {
         printf(hex ? "%02x" : "%c", data->bytes[i++]);
     }
+    if (!hex) printf("\"");
     printf("\n");
 }
 
