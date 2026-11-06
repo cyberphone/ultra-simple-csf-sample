@@ -1,7 +1,7 @@
 <a id='main'></a>
 ## Ultra-simple CSF Sample
 
-Sample:
+CSF sample:
 ```cbor
 {
   1: "data",
@@ -17,6 +17,8 @@ HMAC key:
 ```code
 7fdd851a3b9d2dafc5f0d00030e22b9343900cd42ede4948568a4a2ee655291a
 ```
+
+Decoder/verifier code: [demo.c](src/demo.c) 
 
 Expected output:
 ```code
