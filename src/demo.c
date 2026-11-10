@@ -40,7 +40,7 @@ const uint8_t HMAC_KEY[] = {
 #define COSE_HS256_ALG 5
 #define COSE_HS256_LEN 32
 
-int bufferPosition;
+uint32_t bufferPosition;
 
 void failedOperation(char *message, ...) {
     va_list args;
@@ -69,27 +69,28 @@ uint8_t _getByte() {
     return buffer[bufferPosition++];
 }
 
-int32_t _getLength(uint8_t header) {
-    int32_t length = header & 0x1f;
+uint64_t _getLength(uint8_t header, uint64_t max) {
+    uint64_t length = header & 0x1f;
     if (length >= 24) switch (length) {
         default:
-            failedOperation("Unsupported or invalid length: 0x%02x", length);
+            failedOperation("Invalid length: 0x%02x", length);
         case 24:
         case 25:
         case 26:
+        case 27:
             {
                 int32_t q = 1 << (length - 24);
-                int32_t leadingZeroMask = 0xffff << (q * 4);
+                uint64_t leadingZeroMask = 0xffffffff << (q * 4);
                 length = 0;
                 while (q--) {
                     length <<= 8;
                     length += _getByte();
                 }
-                if (length & 0x80000000) {
-                    failedOperation("Int32 value out of range");
-                }
                 if (!(length & leadingZeroMask) || length < 24) {
                     failedOperation("Non-deterministically encoded integer");
+                }
+                if (max && length > max) { // max == 0: full uint64_t.
+                    failedOperation("Value exceeded: %d", max);
                 }
             }
     }
@@ -101,7 +102,7 @@ int32_t getInt32() {
     if (header & 0xc0) {
         failedOperation("Expected integer");
     }
-    int32_t value = _getLength(header);
+    int32_t value = (int32_t)_getLength(header, 0x7fffffff);
     return header < 0x20 ? value : ~value;
 }
 
@@ -117,17 +118,17 @@ void getKey(int32_t key) {
     }
 }
 
-int32_t getMap(int32_t elements) {
-    int32_t savePos = bufferPosition;
+int32_t getMap(uint32_t elements) {
+    uint32_t savePos = bufferPosition;
     uint8_t header = _getByte();
-    if ((header & 0xe0) != 0xa0 || elements != _getLength(header)) {
+    if ((header & 0xe0) != 0xa0 || elements != _getLength(header, 255)) {
         failedOperation("Expected map with %d elements", elements);
     }
     return savePos; 
 }
 
 typedef struct {
-    int length;
+    uint32_t length;
     uint8_t* bytes;
 } STRING;
 
@@ -136,7 +137,7 @@ void _getString(uint8_t majorType, STRING* string) {
     if ((header & 0xe0) != majorType) {
         failedOperation("Expected string type");
     }
-    int32_t length = _getLength(header);
+    uint32_t length = (uint32_t)_getLength(header, 1024);
     string->length = length;
     string->bytes = &buffer[bufferPosition];
     while (length--) {
@@ -155,7 +156,7 @@ void getBstr(STRING* string) {
 void debugPrint(STRING* data, bool hex, char* description) {
     printf("%s: ", description);
     if (!hex) printf("\"");
-    for (int i = 0; i < data->length; ) {
+    for (uint32_t i = 0; i < data->length; ) {
         printf(hex ? "%02x" : "%c", data->bytes[i++]);
     }
     if (!hex) printf("\"");
