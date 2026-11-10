@@ -220,14 +220,16 @@ int main(int argc, char **args) {
     debugPrint(&signatureValue, true, "Signature value");
 
     // Finally, signature validation.
-    if (algorithm != COSE_HS256_ALG || signatureValue.length != COSE_HS256_LEN) {
+    if (algorithm != COSE_HS256_ALG ||
+        signatureValue.length != COSE_HS256_LEN) {
         failedOperation("Error in algorithm or signatureValue.length");
     }
     uint8_t out[COSE_HS256_LEN];
-    size_t hmac = hmac_sha256(HMAC_KEY, sizeof(HMAC_KEY), 
-                              signedData.bytes, signedData.length, 
-                              out, COSE_HS256_LEN);
-    if (hmac != COSE_HS256_LEN || memcmp(out, signatureValue.bytes, COSE_HS256_LEN)) {
+    uint32_t hmac = hmac_sha256(HMAC_KEY, sizeof(HMAC_KEY), 
+                                signedData.bytes, signedData.length, 
+                                out, COSE_HS256_LEN);
+    if (hmac != COSE_HS256_LEN ||
+        memcmp(out, signatureValue.bytes, COSE_HS256_LEN)) {
         failedOperation("Signature validation failed");
     }
     printf("\nSample validated!!!\n");

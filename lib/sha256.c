@@ -188,7 +188,7 @@ void Sha256Update(Sha256Context* Context,  // [in out]
       BufferSize -= BLOCK_SIZE;
     } else {
       n = MIN(BufferSize, (BLOCK_SIZE - Context->curlen));
-      memcpy(Context->buf + Context->curlen, Buffer, (size_t)n);
+      memcpy(Context->buf + Context->curlen, Buffer, (uint32_t)n);
       Context->curlen += n;
       Buffer = (uint8_t*)Buffer + n;
       BufferSize -= n;
@@ -211,7 +211,7 @@ void Sha256Update(Sha256Context* Context,  // [in out]
 void Sha256Finalise(Sha256Context* Context,  // [in out]
                     SHA256_HASH* Digest      // [out]
 ) {
-  int i;
+  uint32_t i;
 
   if (Context->curlen >= sizeof(Context->buf)) {
     return;

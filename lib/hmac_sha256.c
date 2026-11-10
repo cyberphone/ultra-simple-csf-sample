@@ -15,31 +15,31 @@
 
 // Concatenate X & Y, return hash.
 static void* H(const void* x,
-               const size_t xlen,
+               const uint32_t xlen,
                const void* y,
-               const size_t ylen,
+               const uint32_t ylen,
                void* out,
-               const size_t outlen);
+               const uint32_t outlen);
 
 // Wrapper for sha256
 static void* sha256(const void* data,
-                    const size_t datalen,
+                    const uint32_t datalen,
                     void* out,
-                    const size_t outlen);
+                    const uint32_t outlen);
 
 // Declared in hmac_sha256.h
-size_t hmac_sha256(const void* key,
-                   const size_t keylen,
+uint32_t hmac_sha256(const void* key,
+                   const uint32_t keylen,
                    const void* data,
-                   const size_t datalen,
+                   const uint32_t datalen,
                    void* out,
-                   const size_t outlen) {
+                   const uint32_t outlen) {
   uint8_t k[SHA256_BLOCK_SIZE];
   uint8_t k_ipad[SHA256_BLOCK_SIZE];
   uint8_t k_opad[SHA256_BLOCK_SIZE];
   uint8_t ihash[SHA256_HASH_SIZE];
   uint8_t ohash[SHA256_HASH_SIZE];
-  size_t sz;
+  uint32_t sz;
   int i;
 
   memset(k, 0, sizeof(k));
@@ -70,13 +70,13 @@ size_t hmac_sha256(const void* key,
 }
 
 static void* H(const void* x,
-               const size_t xlen,
+               const uint32_t xlen,
                const void* y,
-               const size_t ylen,
+               const uint32_t ylen,
                void* out,
-               const size_t outlen) {
+               const uint32_t outlen) {
   void* result;
-  size_t buflen = (xlen + ylen);
+  uint32_t buflen = (xlen + ylen);
   uint8_t* buf = (uint8_t*)malloc(buflen);
 
   memcpy(buf, x, xlen);
@@ -88,10 +88,10 @@ static void* H(const void* x,
 }
 
 static void* sha256(const void* data,
-                    const size_t datalen,
+                    const uint32_t datalen,
                     void* out,
-                    const size_t outlen) {
-  size_t sz;
+                    const uint32_t outlen) {
+  uint32_t sz;
   Sha256Context ctx;
   SHA256_HASH hash;
 
