@@ -80,7 +80,7 @@ uint64_t _getLength(uint8_t header, uint64_t max) {
         case 27:
             {
                 int32_t q = 1 << (length - 24);
-                uint64_t leadingZeroMask = 0xffffffff << (q * 4);
+                uint64_t leadingZeroMask = 0xffffffffL << (q * 4);
                 length = 0;
                 while (q--) {
                     length <<= 8;
@@ -90,7 +90,7 @@ uint64_t _getLength(uint8_t header, uint64_t max) {
                     failedOperation("Non-deterministically encoded integer");
                 }
                 if (max && length > max) { // max == 0: full uint64_t.
-                    failedOperation("Value exceeded: %d", max);
+                    failedOperation("Value exceeded: 0x%x", max);
                 }
             }
     }
