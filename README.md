@@ -1,7 +1,9 @@
 <a id='main'></a>
 ## Ultra-simple CSF Sample
 
-CSF sample:
+CSF reference: https://www.ietf.org/archive/id/draft-rundgren-cbor-core-25.html#name-embedded-signatures.
+
+CSF sample (copied from the reference):
 ```cbor
 {
   1: "data",
