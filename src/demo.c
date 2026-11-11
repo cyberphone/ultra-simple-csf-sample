@@ -73,7 +73,7 @@ uint64_t _getLength(uint8_t header, uint64_t max) {
     uint64_t length = header & 0x1f;
     if (length >= 24) switch (length) {
         default:
-            failedOperation("Invalid length: 0x%02x", length);
+            failedOperation("Invalid header: 0x%02x", header);
         case 24:
         case 25:
         case 26:
@@ -87,7 +87,7 @@ uint64_t _getLength(uint8_t header, uint64_t max) {
                     length += _getByte();
                 }
                 if (!(length & leadingZeroMask) || length < 24) {
-                    failedOperation("Non-deterministically encoded integer");
+                    failedOperation("Non-deterministically encoded header");
                 }
                 if (max && length > max) { // max == 0: full uint64_t.
                     failedOperation("Value exceeded: 0x%x", max);
